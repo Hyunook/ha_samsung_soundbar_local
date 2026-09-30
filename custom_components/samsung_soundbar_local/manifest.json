@@ -1,0 +1,18 @@
+{
+  "domain": "samsung_soundbar_local",
+  "name": "Samsung Soundbar (Local)",
+  "codeowners": ["@V4n1X"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/V4n1X/ha_samsung_soundbar_local",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/V4n1X/ha_samsung_soundbar_local/issues",
+  "requirements": [],
+  "ssdp": [
+    {
+      "st": "urn:samsung.com:device:RemoteControlReceiver:1"
+    }
+  ],
+  "version": "1.0.0"
+}

@@ -1,0 +1,55 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Verbindung zur Samsung Soundbar",
+        "description": "Gib die IP-Adresse und den Port deiner Samsung Soundbar ein.",
+        "data": {
+          "host": "IP-Adresse",
+          "port": "Port",
+          "scan_interval": "Update-Intervall (Sekunden)"
+        }
+      },
+      "ssdp_confirm": {
+        "title": "Samsung Soundbar entdeckt",
+        "description": "Möchtest du die Samsung Soundbar unter {host} einrichten?",
+        "data": {
+          "port": "Port",
+          "scan_interval": "Update-Intervall (Sekunden)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung fehlgeschlagen",
+      "unknown": "Unerwarteter Fehler"
+    },
+    "abort": {
+      "already_configured": "Gerät ist bereits konfiguriert",
+      "cannot_connect": "Verbindung fehlgeschlagen"
+    }
+  },
+  "options": {
+    "error": {
+      "cannot_connect": "Verbindung fehlgeschlagen",
+      "wrong_device": "Diese Adresse gehört zu einer anderen Soundbar"
+    },
+    "step": {
+      "init": {
+        "title": "Samsung Soundbar konfigurieren",
+        "description": "Aktualisiere die Verbindungsdetails oder das Abfrageintervall.",
+        "data": {
+          "host": "IP-Adresse",
+          "port": "Port",
+          "scan_interval": "Update-Intervall (Sekunden)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "sound_mode": {
+        "name": "Tonmodus"
+      }
+    }
+  }
+}
