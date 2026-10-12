@@ -78,6 +78,10 @@ screenshots/
 *.xls
 *.xlsx
 
+# Neutral integration icon (no third-party logos)
+!/custom_components/samsung_soundbar_local/brand/icon.png
+!/custom_components/samsung_soundbar_local/brand/icon@2x.png
+
 # Local development material
 /tools/
 /.githooks/

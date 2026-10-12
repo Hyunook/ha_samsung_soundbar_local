@@ -85,8 +85,11 @@ ALLOWED_ALLOWLIST_NAMES = {
     ".env.sample",
     ".env.template",
 }
-# Brand images are loaded from Home Assistant Brands, never committed.
-ALLOWED_REPOSITORY_IMAGES: set[str] = set()
+# Only the neutral integration icon; no third-party logos.
+ALLOWED_REPOSITORY_IMAGES = {
+    "custom_components/samsung_soundbar_local/brand/icon.png",
+    "custom_components/samsung_soundbar_local/brand/icon@2x.png",
+}
 ALLOWED_HOSTS = {"0.0.0.0", "127.0.0.1", "::1", "localhost"}
 PLACEHOLDER_MARKERS = {
     "changeme",
@@ -282,9 +285,15 @@ def text_findings(relative: str, content: bytes) -> list[Finding]:
             if not match:
                 continue
             value = match.group(0)
-            if kind == "email address" and (
-                is_placeholder(value)
-                or re.search(r"https?://[^\s\"']*$", line[: match.start()])
+            if (
+                kind == "email address"
+                and (
+                    is_placeholder(value)
+                    # File names such as icon@2x.png are not addresses.
+                    or PurePosixPath(value).suffix.lower()
+                    in TEXT_SUFFIXES | SENSITIVE_SUFFIXES
+                    or re.search(r"https?://[^\s\"']*$", line[: match.start()])
+                )
             ):
                 continue
             if kind in {"UUID", "MAC address"} and is_placeholder(value):

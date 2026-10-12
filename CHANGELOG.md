@@ -6,16 +6,16 @@ the project uses [Semantic Versioning](https://semver.org/).
 
 ## [1.1.2] - 2026-10-12
 
-### 🔥 Removed
+No functional changes to the integration.
 
-- 🖼️ The bundled brand icon (`brand/icon.png`). The repository no longer
-  contains any Samsung logos or other images; the README logo is linked from
+### 🎨 Changed
+
+- 🖼️ The integration icon (`brand/icon.png`, `brand/icon@2x.png`) no longer
+  shows the Samsung logo. It is replaced by a neutral soundbar icon based on the
+  Material Design Icons `soundbar` icon (Pictogrammers, Apache 2.0). The
+  repository contains no Samsung logos; the README logo is linked from
   [Home Assistant Brands](https://github.com/home-assistant/brands).
-
-### ⚠️ Upgrade notes
-
-- Home Assistant shows a generic placeholder icon for this integration.
-  Functionality is unchanged.
+- 🔒 The privacy check and tests only allow these two icon files as images.
 
 ## [1.1.1] - 2026-10-12
 

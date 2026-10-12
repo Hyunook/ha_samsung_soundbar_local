@@ -168,3 +168,9 @@ by Samsung. The logo above is loaded from
 [Home Assistant Brands](https://github.com/home-assistant/brands) and is not
 part of this repository. Samsung names and logos are trademarks of their
 respective owners.
+
+The integration icon contains no Samsung logo. It is based on the
+[Material Design Icons](https://pictogrammers.com/library/mdi/) `soundbar`
+icon by Pictogrammers, licensed under
+[Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0), modified with a
+background and equalizer bars.
