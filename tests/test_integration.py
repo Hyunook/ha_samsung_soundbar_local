@@ -307,7 +307,9 @@ class ReleaseTests(unittest.IsolatedAsyncioTestCase):
         root = ROOT / "custom_components" / DOMAIN
         manifest = json.loads((root / "manifest.json").read_text())
         self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+$")
-        self.assertTrue((root / "brand/icon.png").is_file())
+        self.assertFalse(
+            list(root.glob("**/*.png")), "brand images come from HA Brands"
+        )
         icons = json.loads((root / "icons.json").read_text())
         strings_entities = json.loads((root / "strings.json").read_text())["entity"]
         for platform, keys in icons["entity"].items():

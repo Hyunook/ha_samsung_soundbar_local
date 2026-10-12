@@ -4,6 +4,19 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.1.2] - 2026-10-12
+
+### 🔥 Removed
+
+- 🖼️ The bundled brand icon (`brand/icon.png`). The repository no longer
+  contains any Samsung logos or other images; the README logo is linked from
+  [Home Assistant Brands](https://github.com/home-assistant/brands).
+
+### ⚠️ Upgrade notes
+
+- Home Assistant shows a generic placeholder icon for this integration.
+  Functionality is unchanged.
+
 ## [1.1.1] - 2026-10-12
 
 No functional changes to the integration.
@@ -78,6 +91,7 @@ automated tests on 2026.10.1 and 2026.9.4.
 - 🔍 SSDP discovery and UI setup.
 - 🏠 Fully local communication with the soundbar's HTTP/XML API on port 56001.
 
+[1.1.2]: https://github.com/V4n1X/ha_samsung_soundbar_local/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/V4n1X/ha_samsung_soundbar_local/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/V4n1X/ha_samsung_soundbar_local/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/V4n1X/ha_samsung_soundbar_local/releases/tag/v1.0.0

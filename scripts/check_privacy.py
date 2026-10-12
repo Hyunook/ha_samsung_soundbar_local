@@ -85,9 +85,8 @@ ALLOWED_ALLOWLIST_NAMES = {
     ".env.sample",
     ".env.template",
 }
-ALLOWED_REPOSITORY_IMAGES = {
-    "custom_components/samsung_soundbar_local/brand/icon.png",
-}
+# Brand images are loaded from Home Assistant Brands, never committed.
+ALLOWED_REPOSITORY_IMAGES: set[str] = set()
 ALLOWED_HOSTS = {"0.0.0.0", "127.0.0.1", "::1", "localhost"}
 PLACEHOLDER_MARKERS = {
     "changeme",

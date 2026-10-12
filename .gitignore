@@ -78,9 +78,6 @@ screenshots/
 *.xls
 *.xlsx
 
-# Required local integration brand asset
-!/custom_components/samsung_soundbar_local/brand/icon.png
-
 # Local development material
 /tools/
 /.githooks/
