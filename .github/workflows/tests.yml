@@ -1,0 +1,50 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/ruff-action@v4
+      - run: ruff format --check
+
+  privacy:
+    name: Privacy check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+      - run: python scripts/check_privacy.py
+
+  tests:
+    name: Home Assistant ${{ matrix.home-assistant }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Minimum version from hacs.json and the latest stable release.
+        home-assistant: ["2026.9.4", "stable"]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Run integration tests
+        run: >
+          docker run --rm
+          -v "${{ github.workspace }}:/workspace" -w /workspace
+          -e PYTHONPATH=/workspace
+          --entrypoint python
+          ghcr.io/home-assistant/home-assistant:${{ matrix.home-assistant }}
+          tests/test_integration.py

@@ -1,0 +1,47 @@
+name: 🐛 Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ⚠️ **Do not post personal data.** Remove IP addresses, MAC addresses,
+        serial numbers, device IDs and tokens from logs before submitting.
+  - type: input
+    id: model
+    attributes:
+      label: Soundbar model
+      placeholder: HW-Q950T
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Soundbar firmware
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+      placeholder: "2026.10.1"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Integration version
+      placeholder: "1.1.1"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Which action failed and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Debug log of `custom_components.samsung_soundbar_local`, with identifiers removed.
+      render: text

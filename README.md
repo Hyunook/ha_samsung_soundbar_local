@@ -16,6 +16,9 @@
   <a href="https://github.com/V4n1X/ha_samsung_soundbar_local/releases"><img src="https://img.shields.io/github/v/release/V4n1X/ha_samsung_soundbar_local" alt="Release"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2026.9%2B-18BCF2?logo=homeassistant&logoColor=white" alt="Home Assistant 2026.9+">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <br>
+  <a href="https://github.com/V4n1X/ha_samsung_soundbar_local/actions/workflows/validate.yml"><img src="https://github.com/V4n1X/ha_samsung_soundbar_local/actions/workflows/validate.yml/badge.svg" alt="Validate"></a>
+  <a href="https://github.com/V4n1X/ha_samsung_soundbar_local/actions/workflows/tests.yml"><img src="https://github.com/V4n1X/ha_samsung_soundbar_local/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
 </p>
 
 ---
@@ -30,6 +33,7 @@
 - [⚠️ Limitations](#️-limitations)
 - [🩺 Troubleshooting](#-troubleshooting)
 - [🐛 Reporting issues](#-reporting-issues)
+- [🤝 Contributing](#-contributing)
 - [📝 Changelog](CHANGELOG.md)
 - [📄 License](#-license)
 
@@ -149,6 +153,11 @@ action that failed.
 > [!CAUTION]
 > Remove IP addresses, MAC addresses, serial numbers and other identifiers from
 > logs before sharing them.
+
+## 🤝 Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for tests,
+CI and the rules on personal data.
 
 ## 📄 License
 

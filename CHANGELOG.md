@@ -4,6 +4,25 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.1.1] - 2026-10-12
+
+No functional changes to the integration.
+
+### 👷 CI
+
+- ✅ GitHub Actions for the HACS validation and hassfest (push, pull request, daily).
+- 🧪 Integration tests in the official Home Assistant container, on the
+  minimum version (2026.9.4) and the latest stable release.
+- 🚨 Ruff lint and format checks.
+- 🔒 Privacy check in CI that blocks personal data and secrets.
+- ⬆️ Dependabot for GitHub Actions.
+
+### 📝 Documentation
+
+- 🤝 `CONTRIBUTING.md` with test, CI and personal data rules.
+- 🐛 Issue templates for bug reports and feature requests.
+- 🏷️ CI status badges in the README.
+
 ## [1.1.0] - 2026-10-12
 
 Tested with Home Assistant **2026.10.1** on a Samsung HW-Q950T and with
@@ -59,5 +78,6 @@ automated tests on 2026.10.1 and 2026.9.4.
 - 🔍 SSDP discovery and UI setup.
 - 🏠 Fully local communication with the soundbar's HTTP/XML API on port 56001.
 
+[1.1.1]: https://github.com/V4n1X/ha_samsung_soundbar_local/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/V4n1X/ha_samsung_soundbar_local/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/V4n1X/ha_samsung_soundbar_local/releases/tag/v1.0.0
