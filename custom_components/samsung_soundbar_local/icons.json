@@ -1,0 +1,19 @@
+{
+  "entity": {
+    "number": {
+      "woofer_level": {
+        "default": "mdi:speaker-wireless"
+      }
+    },
+    "select": {
+      "equalizer": {
+        "default": "mdi:equalizer"
+      }
+    },
+    "sensor": {
+      "sound_mode": {
+        "default": "mdi:surround-sound"
+      }
+    }
+  }
+}

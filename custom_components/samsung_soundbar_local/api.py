@@ -28,7 +28,7 @@ class SoundbarAPI:
         self.session = session
         self.base_url = f"http://{self.ip}:{self.port}/UIC?cmd="
 
-    async def _send_cmd(self, cmd_name: str, params: str = "") -> dict[str, Any]:
+    async def _request(self, cmd_name: str, params: str = "") -> ET.Element:
         encoded_params = urllib.parse.quote(params)
         url = f"{self.base_url}%3Cname%3E{cmd_name}%3C/name%3E{encoded_params}"
 
@@ -36,11 +36,15 @@ class SoundbarAPI:
             async with self.session.get(url, timeout=5) as response:
                 response.raise_for_status()
                 res_text = await response.text()
-                return self._parse_xml(res_text)
         except (aiohttp.ClientError, TimeoutError) as err:
             raise SoundbarAPIError("Cannot communicate with soundbar") from err
+        return self._parse_xml(res_text)
 
-    def _parse_xml(self, xml_str: str) -> dict[str, Any]:
+    async def _send_cmd(self, cmd_name: str, params: str = "") -> dict[str, Any]:
+        response = await self._request(cmd_name, params)
+        return {"result": "ok", **{child.tag: child.text for child in response}}
+
+    def _parse_xml(self, xml_str: str) -> ET.Element:
         try:
             root = ET.fromstring(xml_str)
         except ET.ParseError as err:
@@ -50,7 +54,7 @@ class SoundbarAPI:
             raise SoundbarAPIError("Missing response element")
         if response.get("result", "").lower() != "ok":
             raise SoundbarUnsupportedError("Device rejected command")
-        return {"result": "ok", **{child.tag: child.text for child in response}}
+        return response
 
     async def _value(self, command: str, field: str) -> str:
         result = await self._send_cmd(command)
@@ -123,6 +127,19 @@ class SoundbarAPI:
         return res.get("result", "")
 
     # --- EQ PRESETS ---
+    async def get_eq_presets(self) -> dict[int, str]:
+        """Return the model's equalizer presets as index -> name."""
+        response = await self._request("Get7BandEQList")
+        presets: dict[int, str] = {}
+        for preset in response.iterfind(".//presetlist/preset"):
+            index = (preset.findtext("presetindex") or "").strip()
+            name = (preset.findtext("presetname") or "").strip()
+            if index.isdigit() and name and name not in presets.values():
+                presets[int(index)] = name
+        if not presets:
+            raise SoundbarAPIError("No presets in Get7BandEQList response")
+        return presets
+
     async def get_eq_mode(self) -> int:
         return await self._number("GetCurrentEQMode", "presetindex")
 

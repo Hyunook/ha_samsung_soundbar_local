@@ -1,21 +1,43 @@
 {
   "config": {
+    "flow_title": "{name}",
     "step": {
       "user": {
         "title": "Connect to Samsung Soundbar",
-        "description": "Enter the IP address and port of your Samsung Soundbar.",
+        "description": "Enter the address of your Samsung soundbar.",
         "data": {
-          "host": "IP Address",
+          "host": "Host",
           "port": "Port",
-          "scan_interval": "Update Interval (Seconds)"
+          "scan_interval": "Update interval (seconds)"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the soundbar. A DHCP reservation is recommended.",
+          "port": "Local HTTP API port. Only change this if your model uses a different port.",
+          "scan_interval": "How often the state is polled. Minimum 5 seconds."
         }
       },
       "ssdp_confirm": {
         "title": "Discovered Samsung Soundbar",
-        "description": "Do you want to set up the Samsung Soundbar at {host}?",
+        "description": "Do you want to set up the Samsung soundbar at {host}?",
         "data": {
           "port": "Port",
-          "scan_interval": "Update Interval (Seconds)"
+          "scan_interval": "Update interval (seconds)"
+        },
+        "data_description": {
+          "port": "Local HTTP API port. Only change this if your model uses a different port.",
+          "scan_interval": "How often the state is polled. Minimum 5 seconds."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Samsung Soundbar",
+        "description": "Update the address of the soundbar.",
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the soundbar.",
+          "port": "Local HTTP API port."
         }
       }
     },
@@ -25,31 +47,47 @@
     },
     "abort": {
       "already_configured": "Device is already configured",
-      "cannot_connect": "Failed to connect"
+      "cannot_connect": "Failed to connect",
+      "reconfigure_successful": "Re-configuration was successful",
+      "wrong_device": "This address belongs to a different soundbar"
     }
   },
   "options": {
-    "error": {
-      "cannot_connect": "Failed to connect",
-      "wrong_device": "This address belongs to a different soundbar"
-    },
     "step": {
       "init": {
-        "title": "Configure Samsung Soundbar",
-        "description": "Update the connection details or polling interval.",
+        "title": "Samsung Soundbar options",
         "data": {
-          "host": "IP Address",
-          "port": "Port",
-          "scan_interval": "Update Interval (Seconds)"
+          "scan_interval": "Update interval (seconds)"
+        },
+        "data_description": {
+          "scan_interval": "How often the state is polled. Minimum 5 seconds."
         }
       }
     }
   },
   "entity": {
+    "number": {
+      "woofer_level": {
+        "name": "Subwoofer"
+      }
+    },
+    "select": {
+      "equalizer": {
+        "name": "Equalizer"
+      }
+    },
     "sensor": {
       "sound_mode": {
-        "name": "Sound Mode"
+        "name": "Sound mode"
       }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "The soundbar did not accept the command"
+    },
+    "invalid_source": {
+      "message": "Unsupported input source: {source}"
     }
   }
 }

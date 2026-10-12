@@ -1,97 +1,161 @@
-# Samsung Soundbar (Local)
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://brands.home-assistant.io/samsungtv/dark_logo@2x.png">
+    <img src="https://brands.home-assistant.io/samsungtv/logo@2x.png" width="360" alt="Samsung logo">
+  </picture>
+</p>
 
-Local Samsung soundbar control for **Home Assistant 2026.9 or newer**.
-Communicates directly with the soundbar's HTTP/XML API on port **56001**.
-No SmartThings account, cloud token, or additional Python package is required.
+<h1 align="center">Samsung Soundbar (Local)</h1>
 
-[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=V4n1X&repository=ha_samsung_soundbar_local&category=integration)
-[![Release](https://img.shields.io/github/v/release/V4n1X/ha_samsung_soundbar_local)](https://github.com/V4n1X/ha_samsung_soundbar_local/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+<p align="center">
+  🔊 Local control of Samsung soundbars in Home Assistant — no cloud, no account, no extra packages.
+</p>
 
-## Features
+<p align="center">
+  <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5.svg" alt="HACS Custom"></a>
+  <a href="https://github.com/V4n1X/ha_samsung_soundbar_local/releases"><img src="https://img.shields.io/github/v/release/V4n1X/ha_samsung_soundbar_local" alt="Release"></a>
+  <img src="https://img.shields.io/badge/Home%20Assistant-2026.9%2B-18BCF2?logo=homeassistant&logoColor=white" alt="Home Assistant 2026.9+">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+</p>
 
-| Entity | Function |
-| --- | --- |
-| Media player | Power, volume, mute and input selection |
-| Sound mode sensor | Current sound mode, when supported |
-| Subwoofer number | Level from -6 to +6, when supported |
-| Equalizer select | NONE, POP, JAZZ and CLASSIC presets, when supported |
+---
 
-Configuration is through the Home Assistant UI. Supported devices may also
-be discovered through SSDP. All entities share one polling coordinator.
+## 📑 Contents
 
-## Compatibility
+- [✨ Features](#-features)
+- [✅ Compatibility](#-compatibility)
+- [📦 Installation](#-installation)
+- [⚙️ Configuration](#️-configuration)
+- [🧩 Entities](#-entities)
+- [⚠️ Limitations](#️-limitations)
+- [🩺 Troubleshooting](#-troubleshooting)
+- [🐛 Reporting issues](#-reporting-issues)
+- [📝 Changelog](CHANGELOG.md)
+- [📄 License](#-license)
 
-| Model | Firmware | Verification |
+## ✨ Features
+
+- 🏠 **100 % local** – talks directly to the soundbar's HTTP/XML API on port `56001`
+- 🎛️ **Media player** – power, volume, mute and input selection
+- 🎚️ **Subwoofer level** and 🎼 **equalizer presets read directly from the device**, when the model supports them
+- 🎧 **Sound mode** sensor
+- 🔍 **SSDP discovery** and setup entirely through the UI
+- 🔁 **Reconfigure** the address without removing the device
+- 🌍 Translated into English and German
+
+## ✅ Compatibility
+
+| Model | Firmware | Status |
 | --- | --- | --- |
-| Samsung HW-Q950T | HW-Q950TWWB-1022.0 | Local API previously verified |
+| Samsung HW-Q950T | HW-Q950TWWB-1022.0 | ✅ Tested on hardware with Home Assistant 2026.10.1 |
 
-The release is checked against Home Assistant **2026.9.4** using simulated
-device responses. This is separate from hardware testing: availability of
-individual commands depends on model, firmware and operating mode. Other
-models have not been verified.
+| Home Assistant | Status |
+| --- | --- |
+| 2026.10.1 | ✅ Tested (hardware and automated tests) |
+| 2026.9.4 | ✅ Tested (automated tests, minimum version) |
 
-## Install with HACS
+> [!NOTE]
+> Which commands work depends on model, firmware and operating mode. Other
+> models have not been verified yet. Reports are welcome.
 
-1. Open **HACS → ⋮ → Custom repositories**.
-2. Add `https://github.com/V4n1X/ha_samsung_soundbar_local` with type **Integration**.
-3. Find **Samsung Soundbar (Local)** and download the latest release.
-4. Restart Home Assistant.
-5. Open **Settings → Devices & services → Add integration** and search for
-   **Samsung Soundbar (Local)**.
-6. Enter the soundbar's IP address or hostname and confirm.
+## 📦 Installation
 
-The button above opens this repository in HACS. This integration is distributed
-as a custom repository; it does not require inclusion in the default HACS catalog.
+### HACS (recommended)
 
-### Manual installation
+[![Open your Home Assistant instance and open this repository inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=V4n1X&repository=ha_samsung_soundbar_local&category=integration)
 
-Download the source archive from [Releases](https://github.com/V4n1X/ha_samsung_soundbar_local/releases).
-Copy `custom_components/samsung_soundbar_local/` into your Home Assistant
-configuration directory's `custom_components/` folder, including `brand/` and
-`translations/`. Restart Home Assistant and follow steps 5–6 above.
+1. Click the button above, or open **HACS → ⋮ → Custom repositories** and add
+   `https://github.com/V4n1X/ha_samsung_soundbar_local` with type **Integration**.
+2. Search for **Samsung Soundbar (Local)** and click **Download**.
+3. Restart Home Assistant.
 
-## Configuration
+### Manual
+
+1. Download the latest release from
+   [Releases](https://github.com/V4n1X/ha_samsung_soundbar_local/releases).
+2. Copy `custom_components/samsung_soundbar_local/` into the `custom_components/`
+   folder of your Home Assistant configuration directory.
+3. Restart Home Assistant.
+
+## ⚙️ Configuration
+
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=samsung_soundbar_local)
+
+Go to **Settings → Devices & services → Add integration** and search for
+**Samsung Soundbar (Local)**. Discovered soundbars appear there automatically.
 
 | Setting | Default | Description |
 | --- | --- | --- |
-| Host | Required | Soundbar IP address or hostname |
-| Port | 56001 | Local HTTP API port |
-| Update interval | 10 seconds | Polling interval; minimum 5 seconds |
+| Host | – | IP address or hostname of the soundbar |
+| Port | `56001` | Local HTTP API port |
+| Update interval | `10` s | Polling interval, minimum 5 seconds |
 
-Use the integration's **Configure** action to change these settings. Connection
-changes are validated against the original device identity and automatically
-reload the integration. A DHCP reservation is recommended.
+- 🔁 **Reconfigure** (entry menu ⋮) changes host and port. The new address is
+  checked to make sure it is still the same soundbar.
+- 🕒 **Configure** changes the update interval.
 
-Home Assistant must be able to reach the soundbar's configured TCP port.
-SSDP discovery additionally depends on multicast reaching Home Assistant;
-manual setup works without discovery.
+> [!TIP]
+> Give the soundbar a DHCP reservation in your router so its address stays
+> stable. A soundbar found again via SSDP at a new address is updated
+> automatically.
 
-## Limitations and troubleshooting
+## 🧩 Entities
 
-- This uses an unofficial, model-specific local API. SmartThings cloud and
+| Entity | Type | Description |
+| --- | --- | --- |
+| Soundbar | `media_player` | Power, volume, mute, input source |
+| Subwoofer | `number` | Level from −6 to +6 *(optional)* |
+| Equalizer | `select` | Presets reported by your soundbar *(optional)* |
+| Sound mode | `sensor` | Current sound mode, read-only *(optional)* |
+
+Available inputs: `wifi`, `bt`, `optical`, `hdmi1`, `hdmi2`, `aux`, `din`.
+Your model may accept only some of them.
+
+🎼 **Equalizer presets are read from the device.** The preset list
+(`Get7BandEQList`) is fetched when the integration starts and stored with the
+config entry. Names and options therefore always match your model and firmware.
+If the soundbar is unreachable at startup, the last stored list is used. After a
+firmware update, reload the integration to pick up changed presets.
+
+Optional entities become **unavailable** when the soundbar does not support
+them. They never show made-up values.
+
+## ⚠️ Limitations
+
+- Uses an unofficial, model-specific local API. SmartThings cloud and
   OCF/DTLS commands are not implemented.
-- Input choices are `wifi`, `bt`, `optical`, `hdmi1`, `hdmi2`, `aux` and `din`.
-  Your model may accept only a subset.
-- Sound mode is read-only. EQ and subwoofer support is optional. Unsupported
-  entities are unavailable rather than reporting fabricated values.
-- Explicitly rejected optional reads are skipped until the integration reloads.
-  Failed optional reads are retried after five minutes; core controls continue
-  updating. The initial probe may take longer on unsupported devices.
-- If the soundbar stops responding in standby, its entities become unavailable.
-  Wake-up through the HTTP API is possible only while that API remains reachable.
-- If setup fails, check the address, TCP port and network reachability. Some
-  models do not expose this API. A device that answers HTTP but rejects a command
-  does not necessarily support the remaining features.
+- If the soundbar stops answering in deep standby, its entities become
+  unavailable. Turning it on through the API only works while the API is
+  reachable.
+- Optional commands the device rejects are skipped until the integration
+  reloads. Failed optional reads are retried after five minutes.
 
-Report problems through [GitHub Issues](https://github.com/V4n1X/ha_samsung_soundbar_local/issues),
-including model, firmware, Home Assistant version and the failing action.
-Remove device identifiers, addresses and credentials from logs before sharing.
+## 🩺 Troubleshooting
 
-## License
+| Problem | What to check |
+| --- | --- |
+| *Failed to connect* during setup | IP address, port `56001` reachable from Home Assistant, soundbar powered on |
+| Soundbar is not discovered | SSDP needs multicast between the soundbar and Home Assistant. Manual setup always works. |
+| Subwoofer / equalizer unavailable | Your model or current input does not support it |
+| Equalizer entity missing | The preset list could not be read yet. Reload the integration while the soundbar is on. |
+| Entities unavailable after a router change | Use **Reconfigure** to enter the new address |
 
-[MIT](LICENSE), copyright © 2026 V4n1X.
+## 🐛 Reporting issues
 
-Independent community project, not affiliated with or endorsed by Samsung.
-Samsung names and logos are trademarks of their respective owners; the software
-license does not grant rights to those trademarks.
+Open an issue in [GitHub Issues](https://github.com/V4n1X/ha_samsung_soundbar_local/issues)
+and include the soundbar model, firmware, Home Assistant version and the
+action that failed.
+
+> [!CAUTION]
+> Remove IP addresses, MAC addresses, serial numbers and other identifiers from
+> logs before sharing them.
+
+## 📄 License
+
+[MIT](LICENSE) © 2026 V4n1X
+
+This is an independent community project. It is not affiliated with or endorsed
+by Samsung. The logo above is loaded from
+[Home Assistant Brands](https://github.com/home-assistant/brands) and is not
+part of this repository. Samsung names and logos are trademarks of their
+respective owners.

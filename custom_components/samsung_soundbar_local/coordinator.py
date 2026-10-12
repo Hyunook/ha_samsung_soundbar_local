@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import SoundbarAPI, SoundbarAPIError, SoundbarUnsupportedError
-from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import CONF_EQ_PRESETS, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 type SoundbarConfigEntry = ConfigEntry[SoundbarCoordinator]
@@ -28,6 +28,11 @@ class SoundbarCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             async_get_clientsession(hass),
             settings.get(CONF_PORT, DEFAULT_PORT),
         )
+        # JSON storage needs string keys; restore the last known preset list.
+        self.eq_presets: dict[int, str] = {
+            int(index): name
+            for index, name in entry.data.get(CONF_EQ_PRESETS, {}).items()
+        }
         self._unsupported: set[str] = set()
         self._optional_retry_at: dict[str, float] = {}
         self.device_info = DeviceInfo(
@@ -47,6 +52,23 @@ class SoundbarCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 seconds=settings.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
             ),
         )
+
+    async def _async_setup(self) -> None:
+        """Read the model's equalizer presets and keep them in the entry."""
+        try:
+            presets = await self.api.get_eq_presets()
+        except SoundbarAPIError as err:
+            _LOGGER.debug("Using stored equalizer presets: %s", err)
+            return
+        if presets != self.eq_presets:
+            self.eq_presets = presets
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={
+                    **self.config_entry.data,
+                    CONF_EQ_PRESETS: {str(i): name for i, name in presets.items()},
+                },
+            )
 
     async def _async_update_data(self) -> dict[str, Any]:
         try:

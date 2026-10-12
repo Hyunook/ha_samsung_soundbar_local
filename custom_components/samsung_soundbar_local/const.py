@@ -2,6 +2,8 @@
 
 DOMAIN = "samsung_soundbar_local"
 
+CONF_EQ_PRESETS = "eq_presets"
+
 DEFAULT_PORT = 56001
 DEFAULT_SCAN_INTERVAL = 10
 
