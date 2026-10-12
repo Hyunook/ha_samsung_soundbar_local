@@ -49,7 +49,7 @@ automated tests on 2026.10.1 and 2026.9.4.
   the equalizer entity is not created. Reload the integration while the
   soundbar is on.
 
-## [1.0.0] - 2026-09-30
+## [1.0.0] - 2026-10-12
 
 ### ✨ Added
 
