@@ -18,3 +18,7 @@ MODEL_SOURCES = {
 
 # Reported while Spotify Connect or casting plays; only the app can start it.
 NETWORK_SOURCE = "wifi"
+
+# Bass, treble and rear level range of the SmartThings app (HW-Q950T).
+LEVEL_MIN = -6
+LEVEL_MAX = 6

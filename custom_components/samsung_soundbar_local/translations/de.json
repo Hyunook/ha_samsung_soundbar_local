@@ -67,6 +67,15 @@
   },
   "entity": {
     "number": {
+      "bass": {
+        "name": "Bass"
+      },
+      "rear_level": {
+        "name": "Pegel hinten"
+      },
+      "treble": {
+        "name": "Höhen"
+      },
       "woofer_level": {
         "name": "Subwoofer"
       }

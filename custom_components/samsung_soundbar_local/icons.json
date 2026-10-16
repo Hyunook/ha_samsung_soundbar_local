@@ -1,6 +1,15 @@
 {
   "entity": {
     "number": {
+      "bass": {
+        "default": "mdi:music-clef-bass"
+      },
+      "rear_level": {
+        "default": "mdi:speaker-multiple"
+      },
+      "treble": {
+        "default": "mdi:music-clef-treble"
+      },
       "woofer_level": {
         "default": "mdi:speaker-wireless"
       }
