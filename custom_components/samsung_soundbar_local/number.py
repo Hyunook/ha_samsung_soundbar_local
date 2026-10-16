@@ -34,7 +34,8 @@ class SoundbarWooferNumber(SoundbarEntity, NumberEntity):
 
     _attr_translation_key = "woofer_level"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_native_min_value = -6
+    # The SmartThings app offers -12 to +6; the HW-Q950T stored -7 and -12 (2026-10-16)
+    _attr_native_min_value = -12
     _attr_native_max_value = 6
     _attr_native_step = 1
 
