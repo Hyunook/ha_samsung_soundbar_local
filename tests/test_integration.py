@@ -541,5 +541,26 @@ class ToneAndRearLevelTests(unittest.IsolatedAsyncioTestCase):
             )
 
 
+class FormSchemaTests(unittest.TestCase):
+    """The config flow form must serialize, or the flow answers 500."""
+
+    def test_user_schema_serializes(self) -> None:
+        import homeassistant.helpers.config_validation as cv
+
+        try:
+            from probatio.codecs.fields import to_field_list
+        except ImportError:  # Home Assistant before 2026.10
+            from voluptuous_serialize import convert
+
+            fields = convert(
+                STEP_USER_DATA_SCHEMA, custom_serializer=cv.custom_serializer
+            )
+        else:
+            fields = to_field_list(
+                STEP_USER_DATA_SCHEMA, custom_serializer=cv.custom_serializer
+            )
+        self.assertIn("host", [field["name"] for field in fields])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
