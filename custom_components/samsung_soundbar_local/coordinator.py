@@ -87,6 +87,9 @@ class SoundbarCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ("sound_mode", self.api.get_sound_mode),
             ("woofer_level", self.api.get_woofer_level),
             ("eq_mode", self.api.get_eq_mode),
+            ("bass", self.api.get_bass),
+            ("treble", self.api.get_treble),
+            ("rear_level", self.api.get_rear_level),
         ):
             data[key] = None
             if (

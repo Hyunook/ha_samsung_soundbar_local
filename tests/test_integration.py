@@ -132,6 +132,9 @@ class ReleaseTests(unittest.IsolatedAsyncioTestCase):
             ("get_volume", 20),
             ("get_mute", "off"),
             ("get_input", "wifi"),
+            ("get_bass", 0),
+            ("get_treble", 0),
+            ("get_rear_level", 0),
         ]:
             setattr(coordinator.api, name, AsyncMock(return_value=value))
         coordinator.api.get_sound_mode = AsyncMock(
@@ -161,6 +164,9 @@ class ReleaseTests(unittest.IsolatedAsyncioTestCase):
             "get_sound_mode": "standard",
             "get_woofer_level": 0,
             "get_eq_mode": 1,
+            "get_bass": 0,
+            "get_treble": 0,
+            "get_rear_level": 0,
             "get_eq_presets": {0: "Off", 1: "Pop", 5: "Custom"},
         }
         from contextlib import ExitStack
@@ -326,6 +332,213 @@ class ReleaseTests(unittest.IsolatedAsyncioTestCase):
 
         for translation in (root / "translations").glob("*.json"):
             self.assertEqual(paths(strings), paths(json.loads(translation.read_text())))
+
+
+class ToneAndRearLevelTests(unittest.IsolatedAsyncioTestCase):
+    """Bass, treble and rear level."""
+
+    asyncSetUp = ReleaseTests.asyncSetUp
+    asyncTearDown = ReleaseTests.asyncTearDown
+
+    async def test_commands_on_the_wire(self):
+        rear = (
+            '<response result="ok"><level>{}</level>'
+            "<activate>{}</activate><connection>{}</connection></response>"
+        )
+        responses = {
+            "GetEQBass": '<response result="ok"><eqbass>3</eqbass></response>',
+            "GetEQTreble": '<response result="ok"><eqtreble>-2</eqtreble></response>',
+            "GetRearLevel": rear.format(0, "on", "on"),
+        }
+        sent = []
+
+        async def handler(request):
+            command = request.query["cmd"]
+            sent.append(command)
+            name = command.removeprefix("<name>").partition("</name>")[0]
+            return web.Response(text=responses.get(name, '<response result="ok"/>'))
+
+        app = web.Application()
+        app.router.add_get("/UIC", handler)
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, "127.0.0.1", 0)
+        await site.start()
+        port = site._server.sockets[0].getsockname()[1]
+        try:
+            async with aiohttp.ClientSession() as session:
+                api = SoundbarAPI("127.0.0.1", session, port)
+                self.assertEqual(await api.get_bass(), 3)
+                self.assertEqual(await api.get_treble(), -2)
+                self.assertEqual(await api.get_rear_level(), 0)
+                # Rears off or disconnected: no level, so nothing switches them on.
+                for state in (("off", "on"), ("on", "off"), ("", "")):
+                    responses["GetRearLevel"] = rear.format(2, *state)
+                    self.assertIsNone(await api.get_rear_level())
+                for level in ("x", ""):
+                    responses["GetRearLevel"] = rear.format(level, "on", "on")
+                    with self.assertRaises(SoundbarAPIError):
+                        await api.get_rear_level()
+                responses["GetEQBass"] = '<response result="ok"><eqbass/></response>'
+                with self.assertRaises(SoundbarAPIError):
+                    await api.get_bass()
+                responses["GetEQTreble"] = '<response result="ng"/>'
+                with self.assertRaises(SoundbarUnsupportedError):
+                    await api.get_treble()
+
+                sent.clear()
+                await api.set_bass(-6)
+                await api.set_treble(6)
+                await api.set_rear_level(1)
+                self.assertEqual(
+                    sent,
+                    [
+                        '<name>SetEQBass</name><p type="dec" name="eqbass" val="-6"/>',
+                        '<name>SetEQTreble</name><p type="dec" name="eqtreble" val="6"/>',
+                        (
+                            '<name>SetRearLevel</name><p type="dec" name="level" val="1"/>'
+                            '<p type="str" name="activate" val="on"/>'
+                        ),
+                    ],
+                )
+                sent.clear()
+                for setter, level in (
+                    (api.set_bass, 7),
+                    (api.set_treble, -7),
+                    (api.set_rear_level, 7),
+                    (api.set_rear_level, -7),
+                ):
+                    with self.assertRaises(ValueError):
+                        await setter(level)
+                self.assertEqual(sent, [])
+        finally:
+            await runner.cleanup()
+
+    async def test_failures_stay_optional(self):
+        coordinator = SoundbarCoordinator(self.hass, entry())
+        for name, value in [
+            ("get_power", "1"),
+            ("get_volume", 20),
+            ("get_mute", "off"),
+            ("get_input", "wifi"),
+            ("get_sound_mode", "standard"),
+            ("get_woofer_level", 0),
+            ("get_eq_mode", 1),
+        ]:
+            setattr(coordinator.api, name, AsyncMock(return_value=value))
+        # A timeout surfaces as SoundbarAPIError.
+        coordinator.api.get_bass = AsyncMock(side_effect=SoundbarAPIError())
+        coordinator.api.get_treble = AsyncMock(side_effect=SoundbarUnsupportedError())
+        coordinator.api.get_rear_level = AsyncMock(return_value=None)
+        for _ in range(2):
+            data = await coordinator._async_update_data()
+            self.assertEqual((data["volume"], data["woofer_level"]), (20, 0))
+            self.assertEqual(
+                (data["bass"], data["treble"], data["rear_level"]), (None,) * 3
+            )
+        # Failed: retried after the back-off; rejected: never again;
+        # inactive rears: asked on every update.
+        self.assertEqual(coordinator.api.get_bass.call_count, 1)
+        self.assertEqual(coordinator.api.get_treble.call_count, 1)
+        self.assertEqual(coordinator.api.get_rear_level.call_count, 2)
+        coordinator.api.get_bass.side_effect = None
+        coordinator.api.get_bass.return_value = 2
+        coordinator.api.get_rear_level.return_value = -1
+        coordinator._optional_retry_at.clear()
+        data = await coordinator._async_update_data()
+        self.assertEqual(
+            (data["bass"], data["treble"], data["rear_level"]), (2, None, -1)
+        )
+        self.assertEqual(coordinator.api.get_treble.call_count, 1)
+
+    async def test_entities(self):
+        from contextlib import ExitStack
+
+        from homeassistant.const import EntityCategory
+        from homeassistant.exceptions import ServiceValidationError
+        from homeassistant.helpers import entity_registry as er
+
+        values = {
+            "get_main_info": {"spkmacaddr": MAC, "spkmodelname": "Synthetic Soundbar"},
+            "get_software_version": "synthetic",
+            "get_power": "1",
+            "get_volume": 20,
+            "get_mute": "off",
+            "get_input": "wifi",
+            "get_sound_mode": "standard",
+            "get_woofer_level": 0,
+            "get_eq_mode": 1,
+            "get_eq_presets": {0: "Off", 1: "Pop"},
+            "get_bass": 3,
+            "get_treble": -2,
+            "get_rear_level": None,
+            "set_bass": "ok",
+            "set_treble": "ok",
+            "set_rear_level": "ok",
+        }
+        with ExitStack() as stack:
+            mocks = {
+                method: stack.enter_context(
+                    patch.object(SoundbarAPI, method, AsyncMock(return_value=result))
+                )
+                for method, result in values.items()
+            }
+            result = await self.hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": "user"},
+                data={"host": "example.invalid", "port": 56001, "scan_interval": 10},
+            )
+            self.assertEqual(result["type"], "create_entry", result)
+            await self.hass.async_block_till_done()
+            config_entry = result["result"]
+            registry = er.async_get(self.hass)
+            ids = {
+                key: registry.async_get_entity_id("number", DOMAIN, f"{MAC}_{key}")
+                for key in ("bass", "treble", "rear_level")
+            }
+            expected = {
+                "bass": ("3", "Bass"),
+                "treble": ("-2", "Treble"),
+                "rear_level": ("unavailable", "Rear level"),
+            }
+            for key, entity_id in ids.items():
+                state = self.hass.states.get(entity_id)
+                value, name = expected[key]
+                self.assertEqual(state.state, value, key)
+                self.assertEqual(
+                    state.attributes["friendly_name"], f"Synthetic Soundbar {name}"
+                )
+                self.assertEqual(
+                    registry.async_get(entity_id).entity_category,
+                    EntityCategory.CONFIG,
+                )
+            attributes = self.hass.states.get(ids["bass"]).attributes
+            self.assertEqual(
+                (attributes["min"], attributes["max"], attributes["step"]), (-6, 6, 1)
+            )
+
+            mocks["get_rear_level"].return_value = 1
+            await config_entry.runtime_data.async_refresh()
+            self.assertEqual(self.hass.states.get(ids["rear_level"]).state, "1")
+            for key, value in (("bass", -6), ("treble", 6), ("rear_level", -1)):
+                await self.hass.services.async_call(
+                    "number",
+                    "set_value",
+                    {"entity_id": ids[key], "value": value},
+                    blocking=True,
+                )
+                mocks[f"set_{key}"].assert_awaited_once_with(value)
+                with self.assertRaises(ServiceValidationError):
+                    await self.hass.services.async_call(
+                        "number",
+                        "set_value",
+                        {"entity_id": ids[key], "value": 7},
+                        blocking=True,
+                    )
+                self.assertEqual(mocks[f"set_{key}"].await_count, 1)
+            self.assertTrue(
+                await self.hass.config_entries.async_unload(config_entry.entry_id)
+            )
 
 
 if __name__ == "__main__":

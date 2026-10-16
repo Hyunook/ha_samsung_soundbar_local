@@ -1,0 +1,102 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "삼성 사운드바 연결",
+        "description": "삼성 사운드바의 주소를 입력하세요.",
+        "data": {
+          "host": "호스트",
+          "port": "포트",
+          "scan_interval": "업데이트 간격(초)"
+        },
+        "data_description": {
+          "host": "사운드바의 IP 주소 또는 호스트 이름. DHCP 예약을 권장합니다.",
+          "port": "로컬 HTTP API 포트. 모델이 다른 포트를 쓸 때만 바꾸세요.",
+          "scan_interval": "상태를 조회하는 주기. 최소 5초입니다."
+        }
+      },
+      "ssdp_confirm": {
+        "title": "삼성 사운드바 발견",
+        "description": "{host} 의 삼성 사운드바를 설정할까요?",
+        "data": {
+          "port": "포트",
+          "scan_interval": "업데이트 간격(초)"
+        },
+        "data_description": {
+          "port": "로컬 HTTP API 포트. 모델이 다른 포트를 쓸 때만 바꾸세요.",
+          "scan_interval": "상태를 조회하는 주기. 최소 5초입니다."
+        }
+      },
+      "reconfigure": {
+        "title": "삼성 사운드바 재구성",
+        "description": "사운드바의 주소를 바꿉니다.",
+        "data": {
+          "host": "호스트",
+          "port": "포트"
+        },
+        "data_description": {
+          "host": "사운드바의 IP 주소 또는 호스트 이름.",
+          "port": "로컬 HTTP API 포트."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "연결하지 못했습니다",
+      "unknown": "예기치 않은 오류"
+    },
+    "abort": {
+      "already_configured": "이미 구성된 기기입니다",
+      "cannot_connect": "연결하지 못했습니다",
+      "reconfigure_successful": "재구성을 마쳤습니다",
+      "wrong_device": "이 주소는 다른 사운드바입니다"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "삼성 사운드바 옵션",
+        "data": {
+          "scan_interval": "업데이트 간격(초)"
+        },
+        "data_description": {
+          "scan_interval": "상태를 조회하는 주기. 최소 5초입니다."
+        }
+      }
+    }
+  },
+  "entity": {
+    "number": {
+      "bass": {
+        "name": "저음"
+      },
+      "rear_level": {
+        "name": "후면 레벨"
+      },
+      "treble": {
+        "name": "고음"
+      },
+      "woofer_level": {
+        "name": "서브우퍼"
+      }
+    },
+    "select": {
+      "equalizer": {
+        "name": "이퀄라이저"
+      }
+    },
+    "sensor": {
+      "sound_mode": {
+        "name": "사운드 모드"
+      }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "사운드바가 명령을 받아들이지 않았습니다"
+    },
+    "invalid_source": {
+      "message": "지원하지 않는 입력 소스: {source}"
+    }
+  }
+}

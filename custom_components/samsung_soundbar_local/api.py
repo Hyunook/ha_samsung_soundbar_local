@@ -8,6 +8,8 @@ from typing import Any
 import aiohttp
 from homeassistant.exceptions import HomeAssistantError
 
+from .const import LEVEL_MAX, LEVEL_MIN
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -123,6 +125,58 @@ class SoundbarAPI:
     async def set_woofer_level(self, level: int) -> str:
         res = await self._send_cmd(
             "SetWooferLevel", f'<p type="dec" name="wooferlevel" val="{level}"/>'
+        )
+        return res.get("result", "")
+
+    # --- BASS, TREBLE AND REAR LEVEL ---
+    @staticmethod
+    def _check_level(level: int) -> None:
+        # Refuse before sending: the soundbar's reaction to values outside the
+        # app's range is unknown.
+        if not LEVEL_MIN <= level <= LEVEL_MAX:
+            raise ValueError(f"Level {level} outside {LEVEL_MIN}..{LEVEL_MAX}")
+
+    async def get_bass(self) -> int:
+        return await self._number("GetEQBass", "eqbass")
+
+    async def set_bass(self, level: int) -> str:
+        self._check_level(level)
+        res = await self._send_cmd(
+            "SetEQBass", f'<p type="dec" name="eqbass" val="{level}"/>'
+        )
+        return res.get("result", "")
+
+    async def get_treble(self) -> int:
+        return await self._number("GetEQTreble", "eqtreble")
+
+    async def set_treble(self, level: int) -> str:
+        self._check_level(level)
+        res = await self._send_cmd(
+            "SetEQTreble", f'<p type="dec" name="eqtreble" val="{level}"/>'
+        )
+        return res.get("result", "")
+
+    async def get_rear_level(self) -> int | None:
+        """Return the rear level, or None unless the rear speakers are active."""
+        result = await self._send_cmd("GetRearLevel")
+        # SetRearLevel always sends activate=on; only offer it when that is
+        # already the state, so a level change never switches the rears on.
+        if any(
+            (result.get(field) or "").strip() != "on"
+            for field in ("activate", "connection")
+        ):
+            return None
+        try:
+            return int((result.get("level") or "").strip())
+        except ValueError as err:
+            raise SoundbarAPIError("Invalid number in GetRearLevel response") from err
+
+    async def set_rear_level(self, level: int) -> str:
+        self._check_level(level)
+        res = await self._send_cmd(
+            "SetRearLevel",
+            f'<p type="dec" name="level" val="{level}"/>'
+            '<p type="str" name="activate" val="on"/>',
         )
         return res.get("result", "")
 
