@@ -24,7 +24,9 @@ from .coordinator import SoundbarConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-HOST_VALIDATOR = vol.All(str, str.strip, vol.Length(min=1))
+# Not str.strip: Home Assistant 2026.10 cannot serialize it for the form (500 on
+# opening the flow); the steps strip the host instead.
+HOST_VALIDATOR = vol.All(str, vol.Length(min=1))
 SCAN_INTERVAL_VALIDATOR = vol.All(vol.Coerce(int), vol.Range(min=5))
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -89,6 +91,7 @@ class SoundbarConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            user_input = {**user_input, CONF_HOST: user_input[CONF_HOST].strip()}
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             try:
                 info = await validate_input(self.hass, user_input)
@@ -179,6 +182,7 @@ class SoundbarConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
+            user_input = {**user_input, CONF_HOST: user_input[CONF_HOST].strip()}
             try:
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
