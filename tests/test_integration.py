@@ -541,6 +541,39 @@ class ToneAndRearLevelTests(unittest.IsolatedAsyncioTestCase):
             )
 
 
+class SourceTests(unittest.IsolatedAsyncioTestCase):
+    """A soundbar that will not report its input stays available."""
+
+    asyncSetUp = ReleaseTests.asyncSetUp
+    asyncTearDown = ReleaseTests.asyncTearDown
+
+    async def test_missing_source_keeps_device_available(self):
+        coordinator = SoundbarCoordinator(self.hass, entry())
+        for name, value in [
+            ("get_power", "1"),
+            ("get_volume", 9),
+            ("get_mute", "off"),
+            ("get_sound_mode", "adaptive sound"),
+            ("get_woofer_level", 0),
+            ("get_eq_mode", 0),
+            ("get_bass", 3),
+            ("get_treble", 0),
+            ("get_rear_level", 0),
+        ]:
+            setattr(coordinator.api, name, AsyncMock(return_value=value))
+        coordinator.api.get_input = AsyncMock(
+            side_effect=SoundbarAPIError("Missing function in GetFunc response")
+        )
+        data = await coordinator._async_update_data()
+        self.assertTrue(data["power"])
+        self.assertEqual((data["volume"], data["bass"]), (9, 3))
+        self.assertIsNone(data["source"])
+        coordinator.api.get_input.side_effect = None
+        coordinator.api.get_input.return_value = "d.in"
+        coordinator._optional_retry_at.clear()
+        self.assertEqual((await coordinator._async_update_data())["source"], "d.in")
+
+
 class FormSchemaTests(unittest.TestCase):
     """The config flow form must serialize, or the flow answers 500."""
 
