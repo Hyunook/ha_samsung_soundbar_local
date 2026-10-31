@@ -1,8 +1,5 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://brands.home-assistant.io/samsungtv/dark_logo@2x.png">
-    <img src="https://brands.home-assistant.io/samsungtv/logo@2x.png" width="360" alt="Samsung logo">
-  </picture>
+  <img src="https://brands.home-assistant.io/samsungtv/logo@2x.png" width="360" alt="Samsung logo">
 </p>
 
 <h1 align="center">Samsung Soundbar (Local)</h1>
