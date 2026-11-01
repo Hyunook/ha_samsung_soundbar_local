@@ -4,6 +4,17 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.1.3] - 2026-10-31
+
+No functional changes to the integration.
+
+### 🐛 Fixed
+
+- 🖼️ The README logo is a plain `<img>` again instead of a `<picture>` element
+  with a dark-mode `<source>`. The markdown renderer behind the HACS repository
+  page does not support `picture`/`source` and printed both tags as text above
+  the logo.
+
 ## [1.1.2] - 2026-10-12
 
 No functional changes to the integration.
@@ -91,6 +102,7 @@ automated tests on 2026.10.1 and 2026.9.4.
 - 🔍 SSDP discovery and UI setup.
 - 🏠 Fully local communication with the soundbar's HTTP/XML API on port 56001.
 
+[1.1.3]: https://github.com/V4n1X/ha_samsung_soundbar_local/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/V4n1X/ha_samsung_soundbar_local/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/V4n1X/ha_samsung_soundbar_local/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/V4n1X/ha_samsung_soundbar_local/compare/v1.0.0...v1.1.0
