@@ -97,6 +97,9 @@
     },
     "invalid_source": {
       "message": "지원하지 않는 입력 소스: {source}"
+    },
+    "network_source": {
+      "message": "Wi-Fi 입력은 선택할 수 없습니다. 사운드바에서 Spotify Connect 또는 캐스팅으로 재생하면 시작됩니다."
     }
   }
 }
