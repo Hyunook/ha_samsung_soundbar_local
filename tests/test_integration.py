@@ -133,6 +133,61 @@ class ReleaseTests(unittest.IsolatedAsyncioTestCase):
         finally:
             await runner.cleanup()
 
+    async def test_responses_for_other_commands_are_asked_again(self):
+        def uic(method, body, result="ok"):
+            return (
+                f"<UIC><method>{method}</method>"
+                f'<response result="{result}">{body}</response></UIC>'
+            )
+
+        woofer = uic("WooferLevel", "<level>2</level><connection>on</connection>")
+        rear = uic(
+            "RearLevel",
+            "<level>0</level><activate>on</activate><connection>on</connection>",
+        )
+        replies = []
+        sent = []
+
+        async def handler(request):
+            sent.append(request.query["cmd"])
+            return web.Response(text=replies.pop(0))
+
+        app = web.Application()
+        app.router.add_get("/UIC", handler)
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, "127.0.0.1", 0)
+        await site.start()
+        port = site._server.sockets[0].getsockname()[1]
+        try:
+            async with aiohttp.ClientSession() as session:
+                api = SoundbarAPI("127.0.0.1", session, port)
+                # Same <level> field: the rear response must not become the woofer.
+                replies[:] = [rear, woofer]
+                self.assertEqual(await api.get_woofer_level(), 2)
+                # An empty accepted read is asked again, not taken as rears off.
+                replies[:] = [uic("RearLevel", ""), rear]
+                self.assertEqual(await api.get_rear_level(), 0)
+                # Another command's rejection does not mark this one unsupported.
+                replies[:] = [
+                    uic("EQBalance", "", "ng"),
+                    uic("EQBass", "<eqbass>3</eqbass>"),
+                ]
+                self.assertEqual(await api.get_bass(), 3)
+                sent.clear()
+                replies[:] = [rear] * 3
+                with self.assertRaises(SoundbarAPIError) as err:
+                    await api.get_woofer_level()
+                self.assertNotIsInstance(err.exception, SoundbarUnsupportedError)
+                self.assertEqual(len(sent), 3)
+                # Commands are not repeated.
+                sent.clear()
+                replies[:] = [rear]
+                await api.set_woofer_level(1)
+                self.assertEqual(len(sent), 1)
+        finally:
+            await runner.cleanup()
+
     async def test_input_failure_keeps_last_source(self):
         coordinator = SoundbarCoordinator(self.hass, entry())
         for name, value in [
@@ -603,6 +658,13 @@ class ToneAndRearLevelTests(unittest.IsolatedAsyncioTestCase):
             mocks["get_rear_level"].return_value = 1
             await config_entry.runtime_data.async_refresh()
             self.assertEqual(self.hass.states.get(ids["rear_level"]).state, "1")
+            # The app changes the rears without GetRearLevel noticing.
+            self.assertTrue(
+                self.hass.states.get(ids["rear_level"]).attributes["assumed_state"]
+            )
+            self.assertNotIn(
+                "assumed_state", self.hass.states.get(ids["bass"]).attributes
+            )
             for key, value in (("bass", -6), ("treble", 6), ("rear_level", -1)):
                 await self.hass.services.async_call(
                     "number",

@@ -12,6 +12,27 @@ from .const import LEVEL_MAX, LEVEL_MIN
 
 _LOGGER = logging.getLogger(__name__)
 
+# The soundbar sometimes hands a request the response meant for another one
+# (another client, or a request that timed out). Each response names its
+# command in <method>, so reads are checked against it and asked again.
+METHODS = {
+    "GetPowerStatus": "PowerStatus",
+    "GetVolume": "VolumeLevel",
+    "GetMute": "MuteStatus",
+    "GetFunc": "CurrentFunc",
+    "GetPlayStatus": "PlayStatus",
+    "GetSoundMode": "SoundMode",
+    "GetWooferLevel": "WooferLevel",
+    "GetCurrentEQMode": "CurrentEQMode",
+    "Get7BandEQList": "7BandEQList",
+    "GetEQBass": "EQBass",
+    "GetEQTreble": "EQTreble",
+    "GetRearLevel": "RearLevel",
+    "GetMainInfo": "MainInfo",
+    "GetSoftwareVersion": "SoftwareVersion",
+}
+ATTEMPTS = 3
+
 
 class SoundbarAPIError(HomeAssistantError):
     """Exception to indicate a general API error."""
@@ -43,23 +64,53 @@ class SoundbarAPI:
             f"%3Cname%3E{cmd_name}%3C/name%3E{encoded_params}"
         )
 
-        try:
-            async with self.session.get(url, timeout=timeout) as response:
-                response.raise_for_status()
-                res_text = await response.text()
-        except (aiohttp.ClientError, TimeoutError) as err:
-            raise SoundbarAPIError("Cannot communicate with soundbar") from err
-        return self._parse_xml(res_text)
+        expected = METHODS.get(cmd_name)
+        for _ in range(ATTEMPTS):
+            try:
+                async with self.session.get(url, timeout=timeout) as response:
+                    response.raise_for_status()
+                    res_text = await response.text()
+            except (aiohttp.ClientError, TimeoutError) as err:
+                raise SoundbarAPIError("Cannot communicate with soundbar") from err
+            root = self._parse_root(res_text)
+            if expected is None or self._belongs_to(root, expected):
+                return self._parse_response(root)
+            _LOGGER.debug(
+                "Asking %s again, got a response for %s",
+                cmd_name,
+                root.findtext("method"),
+            )
+        raise SoundbarAPIError(f"No {expected} response to {cmd_name}")
 
     async def _send_cmd(self, cmd_name: str, params: str = "") -> dict[str, Any]:
         response = await self._request(cmd_name, params)
         return {"result": "ok", **{child.tag: child.text for child in response}}
 
-    def _parse_xml(self, xml_str: str) -> ET.Element:
+    @staticmethod
+    def _belongs_to(root: ET.Element, expected: str) -> bool:
+        method = root.findtext("method")
+        if method is not None and method.strip() != expected:
+            return False
+        # An accepted read without any value has been seen as well.
+        response = root if root.tag == "response" else root.find(".//response")
+        return not (
+            response is not None
+            and response.get("result", "").lower() == "ok"
+            and len(response) == 0
+        )
+
+    @staticmethod
+    def _parse_root(xml_str: str) -> ET.Element:
         try:
-            root = ET.fromstring(xml_str)
+            return ET.fromstring(xml_str)
         except ET.ParseError as err:
             raise SoundbarAPIError("Invalid XML response") from err
+
+    def _parse_xml(self, xml_str: str) -> ET.Element:
+        return self._parse_response(self._parse_root(xml_str))
+
+    @staticmethod
+    def _parse_response(root: ET.Element) -> ET.Element:
         response = root if root.tag == "response" else root.find(".//response")
         if response is None:
             raise SoundbarAPIError("Missing response element")
