@@ -4,6 +4,25 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.1.5] - 2026-11-07
+
+### 🐛 Fixed
+
+- 🔀 Values are no longer mixed up between commands. The soundbar sometimes
+  answers a request with the response meant for another one, for example when
+  the SmartThings app talks to it at the same time. The subwoofer could then
+  show the rear level, and a stray response to the volume query made the whole
+  device unavailable. Every read is now checked against the command named in
+  the response and asked again, up to three times.
+- 🔊 An empty answer to the rear level query is asked again instead of being
+  read as rear speakers off.
+
+### 🎨 Changed
+
+- 🔊 The rear level is marked as an assumed state. It changes the same speakers
+  as the SmartThings app's channel volume for the rear, but the app's changes
+  never show up in it. Verified on a HW-Q950T.
+
 ## [1.1.4] - 2026-11-07
 
 The integration's client was tested against a Samsung HW-Q950T (Spotify

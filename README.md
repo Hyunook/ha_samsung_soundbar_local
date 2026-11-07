@@ -108,7 +108,7 @@ Go to **Settings → Devices & services → Add integration** and search for
 | Subwoofer | `number` | Level from −12 to +6 *(optional)* |
 | Bass | `number` | Level from −6 to +6 *(optional)* |
 | Treble | `number` | Level from −6 to +6 *(optional)* |
-| Rear level | `number` | Level from −6 to +6, only while the rear speakers are on and connected *(optional)* |
+| Rear level | `number` | Level from −6 to +6, only while the rear speakers are on and connected *(optional, assumed state)* |
 | Equalizer | `select` | Presets reported by your soundbar *(optional)* |
 | Sound mode | `sensor` | Current sound mode, read-only *(optional)* |
 
@@ -151,6 +151,13 @@ them. They never show made-up values.
   seconds longer. If a model also stops answering the input query during TV
   playback (reported for a TV session, not verified with TV ARC), the input
   may show as `wifi` there too; control keeps working.
+- The rear level and the SmartThings app's **Channel volume → Rear** change the
+  same speakers, and the last change wins. The soundbar keeps the two values
+  apart, though: the rear level only shows what was last set from Home
+  Assistant, never a change made in the app. Home Assistant marks it as an
+  assumed state. Bass, treble and subwoofer stay in sync with the app. The
+  app's other channel levels (center, side, front top, rear top) are not
+  available locally.
 
 ## 🩺 Troubleshooting
 
