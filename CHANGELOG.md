@@ -4,7 +4,12 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 the project uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.1.4] - 2026-11-07
+
+The integration's client was tested against a Samsung HW-Q950T (Spotify
+Connect, HDMI playback, input switching, subwoofer range); automated tests run
+on the latest stable Home Assistant release and 2026.9.4. TV ARC playback is
+not verified.
 
 Bass, treble, rear level, the subwoofer range, the Korean translation and the
 config flow fix come from the
@@ -21,7 +26,6 @@ config flow fix come from the
 
 - 🧩 Adding the integration manually (Settings → Add integration) answered with
   error 500: the host validator could not be serialized for the form.
-
 - 🎵 The integration no longer fails while Spotify Connect is playing. The
   soundbar does not answer `GetFunc` in that mode, which stopped every update
   and left the entry in setup retry. When `GetFunc` does not answer within

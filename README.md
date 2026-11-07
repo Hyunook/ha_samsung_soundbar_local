@@ -146,6 +146,11 @@ them. They never show made-up values.
   reachable.
 - Optional commands the device rejects are skipped until the integration
   reloads. Failed optional reads are retried after five minutes.
+- While Spotify Connect or casting plays, the soundbar does not answer the
+  input query, so the input is shown as `wifi` and each update takes about two
+  seconds longer. If a model also stops answering the input query during TV
+  playback (reported for a TV session, not verified with TV ARC), the input
+  may show as `wifi` there too; control keeps working.
 
 ## 🩺 Troubleshooting
 
