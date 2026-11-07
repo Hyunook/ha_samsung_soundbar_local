@@ -61,6 +61,7 @@ class SoundbarLevelDescription(NumberEntityDescription):
     """A level the coordinator stores under the description key."""
 
     set_fn: Callable[[SoundbarAPI, int], Awaitable[str]]
+    assumed_state: bool = False
 
 
 LEVELS = (
@@ -78,6 +79,9 @@ LEVELS = (
         key="rear_level",
         translation_key="rear_level",
         set_fn=lambda api, level: api.set_rear_level(level),
+        # The SmartThings app sets the same rears through its own channel
+        # volume, which GetRearLevel never reports (HW-Q950T, 2026-11-07).
+        assumed_state=True,
     ),
 )
 
@@ -97,6 +101,7 @@ class SoundbarLevelNumber(SoundbarEntity, NumberEntity):
         """Initialize the level from its description."""
         super().__init__(coordinator, description.key)
         self.entity_description = description
+        self._attr_assumed_state = description.assumed_state
 
     @property
     def available(self) -> bool:
