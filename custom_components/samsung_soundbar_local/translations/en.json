@@ -88,6 +88,9 @@
     },
     "invalid_source": {
       "message": "Unsupported input source: {source}"
+    },
+    "network_source": {
+      "message": "The Wi-Fi input cannot be selected. It starts when Spotify Connect or casting plays on the soundbar."
     }
   }
 }

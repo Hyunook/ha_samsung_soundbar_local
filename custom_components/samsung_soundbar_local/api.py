@@ -26,14 +26,23 @@ class SoundbarAPI:
         self.ip = ip
         self.port = port
         self.session = session
-        self.base_url = f"http://{self.ip}:{self.port}/UIC?cmd="
+        self.base_url = f"http://{self.ip}:{self.port}"
 
-    async def _request(self, cmd_name: str, params: str = "") -> ET.Element:
+    async def _request(
+        self,
+        cmd_name: str,
+        params: str = "",
+        endpoint: str = "UIC",
+        timeout: float = 5,
+    ) -> ET.Element:
         encoded_params = urllib.parse.quote(params)
-        url = f"{self.base_url}%3Cname%3E{cmd_name}%3C/name%3E{encoded_params}"
+        url = (
+            f"{self.base_url}/{endpoint}?cmd="
+            f"%3Cname%3E{cmd_name}%3C/name%3E{encoded_params}"
+        )
 
         try:
-            async with self.session.get(url, timeout=5) as response:
+            async with self.session.get(url, timeout=timeout) as response:
                 response.raise_for_status()
                 res_text = await response.text()
         except (aiohttp.ClientError, TimeoutError) as err:
@@ -71,7 +80,17 @@ class SoundbarAPI:
 
     # --- INPUT ---
     async def get_input(self) -> str:
-        return await self._value("GetFunc", "function")
+        # GetFunc never answers while Spotify Connect plays. The CPM play
+        # status keeps reporting the last network function even after a
+        # switch to another input, so it is only asked when GetFunc hangs.
+        try:
+            response = await self._request("GetFunc", timeout=2)
+        except SoundbarAPIError:
+            response = await self._request("GetPlayStatus", endpoint="CPM")
+        value = (response.findtext("function") or "").strip()
+        if not value:
+            raise SoundbarAPIError("Missing function in input response")
+        return value
 
     async def set_input(self, input_name: str) -> str:
         res = await self._send_cmd(

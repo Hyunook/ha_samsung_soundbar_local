@@ -4,6 +4,27 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### 🐛 Fixed
+
+- 🎵 The integration no longer fails while Spotify Connect is playing. The
+  soundbar does not answer `GetFunc` in that mode, which stopped every update
+  and left the entry in setup retry. When `GetFunc` does not answer within
+  2 seconds, the input is read from the CPM play status (`GetPlayStatus`),
+  which reports `wifi` in that mode.
+- 🔌 A failed input query no longer marks the whole device unavailable; the last
+  known input is kept.
+
+### 🎨 Changed
+
+- 🎛️ `wifi` is no longer offered as an input. It is still shown as the current
+  input during Spotify Connect or casting, but selecting it now gives a clear
+  error instead of a timeout; the soundbar never switches to it on command.
+- 🎛️ The HW-Q950T only offers `hdmi1`, `hdmi2`, `optical` and `bt`: `aux` does
+  not answer there and `din` is the same input as `optical` (D.IN / TV ARC in
+  the SmartThings app). Other models keep `aux` and `din`.
+
 ## [1.1.3] - 2026-10-31
 
 No functional changes to the integration.

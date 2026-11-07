@@ -10,8 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, SOURCES
-from .coordinator import SoundbarConfigEntry
+from .const import DOMAIN, MODEL_SOURCES, NETWORK_SOURCE, SOURCES
+from .coordinator import SoundbarConfigEntry, SoundbarCoordinator
 from .entity import SoundbarEntity
 
 PARALLEL_UPDATES = 1
@@ -41,7 +41,12 @@ class SamsungSoundbarEntity(SoundbarEntity, MediaPlayerEntity):
     _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_supported_features = SUPPORTED_FEATURES
-    _attr_source_list = SOURCES
+
+    def __init__(self, coordinator: SoundbarCoordinator, key: str | None) -> None:
+        """Offer the inputs verified for this model, or all known ones."""
+        super().__init__(coordinator, key)
+        model = coordinator.config_entry.data.get("model")
+        self._attr_source_list = MODEL_SOURCES.get(model, SOURCES)
 
     @property
     def state(self) -> MediaPlayerState | None:
@@ -88,7 +93,12 @@ class SamsungSoundbarEntity(SoundbarEntity, MediaPlayerEntity):
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        if source not in SOURCES:
+        if source == NETWORK_SOURCE:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="network_source",
+            )
+        if source not in self.source_list:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_source",

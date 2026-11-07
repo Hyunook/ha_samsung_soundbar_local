@@ -109,8 +109,21 @@ Go to **Settings → Devices & services → Add integration** and search for
 | Equalizer | `select` | Presets reported by your soundbar *(optional)* |
 | Sound mode | `sensor` | Current sound mode, read-only *(optional)* |
 
-Available inputs: `wifi`, `bt`, `optical`, `hdmi1`, `hdmi2`, `aux`, `din`.
-Your model may accept only some of them.
+Selectable inputs depend on the model:
+
+| Model | Inputs |
+| --- | --- |
+| HW-Q950T (verified) | `hdmi1`, `hdmi2`, `optical`, `bt` |
+| Other models | `hdmi1`, `hdmi2`, `optical`, `bt`, `aux`, `din` |
+
+On the HW-Q950T, `optical` is the value the soundbar reports for the input the
+SmartThings app calls **D.IN / TV ARC**; `din` only switches to that same input
+and `aux` does not exist. Other models may support `aux` and `din`, or only some
+of the inputs. If you know which ones work on your model, please
+[open an issue](https://github.com/V4n1X/ha_samsung_soundbar_local/issues).
+
+While Spotify Connect or casting plays, the input shows as `wifi`. It cannot be
+selected; the soundbar only enters it from the app.
 
 🎼 **Equalizer presets are read from the device.** The preset list
 (`Get7BandEQList`) is fetched when the integration starts and stored with the

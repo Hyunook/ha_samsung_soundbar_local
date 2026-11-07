@@ -79,10 +79,14 @@ class SoundbarCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "power": True,
                 "volume": await self.api.get_volume(),
                 "mute": await self.api.get_mute() == "on",
-                "source": await self.api.get_input(),
             }
         except SoundbarAPIError as err:
             raise UpdateFailed(str(err)) from err
+        try:
+            data["source"] = await self.api.get_input()
+        except SoundbarAPIError as err:
+            _LOGGER.debug("Keeping last known input: %s", err)
+            data["source"] = (self.data or {}).get("source")
         for key, getter in (
             ("sound_mode", self.api.get_sound_mode),
             ("woofer_level", self.api.get_woofer_level),

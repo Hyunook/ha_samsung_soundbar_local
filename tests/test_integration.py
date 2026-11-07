@@ -1,5 +1,6 @@
 """Integration tests against the real Home Assistant runtime; synthetic data only."""
 
+import asyncio
 import json
 import os
 import tempfile
@@ -12,7 +13,7 @@ import aiohttp
 from aiohttp import web
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from custom_components.samsung_soundbar_local.api import (
     SoundbarAPI,
@@ -96,6 +97,73 @@ class ReleaseTests(unittest.IsolatedAsyncioTestCase):
                     await api.get_volume()
         finally:
             await runner.cleanup()
+
+    async def test_input_falls_back_when_getfunc_hangs(self):
+        hang = True
+
+        async def uic(request):
+            self.assertEqual(request.query["cmd"], "<name>GetFunc</name>")
+            if hang:
+                await asyncio.sleep(10)
+            return web.Response(
+                text='<UIC><response result="ok"><function>hdmi1</function></response></UIC>'
+            )
+
+        async def cpm(request):
+            self.assertEqual(request.query["cmd"], "<name>GetPlayStatus</name>")
+            return web.Response(
+                text='<CPM><response result="ok">\n<function>wifi</function>\n'
+                "<submode>cp</submode></response></CPM>"
+            )
+
+        app = web.Application()
+        app.router.add_get("/UIC", uic)
+        app.router.add_get("/CPM", cpm)
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, "127.0.0.1", 0)
+        await site.start()
+        port = site._server.sockets[0].getsockname()[1]
+        try:
+            async with aiohttp.ClientSession() as session:
+                api = SoundbarAPI("127.0.0.1", session, port)
+                self.assertEqual(await api.get_input(), "wifi")
+                hang = False
+                self.assertEqual(await api.get_input(), "hdmi1")
+        finally:
+            await runner.cleanup()
+
+    async def test_input_failure_keeps_last_source(self):
+        coordinator = SoundbarCoordinator(self.hass, entry())
+        for name, value in [
+            ("get_power", "1"),
+            ("get_volume", 20),
+            ("get_mute", "off"),
+            ("get_input", "hdmi1"),
+            ("get_sound_mode", "standard"),
+            ("get_woofer_level", 0),
+            ("get_eq_mode", 1),
+        ]:
+            setattr(coordinator.api, name, AsyncMock(return_value=value))
+        coordinator.data = await coordinator._async_update_data()
+        coordinator.api.get_input = AsyncMock(side_effect=SoundbarAPIError())
+        data = await coordinator._async_update_data()
+        self.assertEqual(data["source"], "hdmi1")
+        self.assertEqual(data["volume"], 20)
+
+    async def test_verified_model_offers_only_its_inputs(self):
+        from custom_components.samsung_soundbar_local.media_player import (
+            SamsungSoundbarEntity,
+        )
+
+        coordinator = SoundbarCoordinator(self.hass, entry(model="HW-Q950T"))
+        player = SamsungSoundbarEntity(coordinator, None)
+        self.assertEqual(player.source_list, ["hdmi1", "hdmi2", "optical", "bt"])
+        player.coordinator.api.set_input = AsyncMock()
+        with self.assertRaises(ServiceValidationError) as err:
+            await player.async_select_source("aux")
+        self.assertEqual(err.exception.translation_key, "invalid_source")
+        player.coordinator.api.set_input.assert_not_awaited()
 
     async def test_eq_preset_list(self):
         api = SoundbarAPI("example.invalid", None)
@@ -223,6 +291,21 @@ class ReleaseTests(unittest.IsolatedAsyncioTestCase):
                         blocking=True,
                     )
                 self.assertEqual(err.exception.translation_key, "command_failed")
+            player = self.hass.states.async_all("media_player")[0]
+            self.assertEqual(
+                player.attributes["source_list"],
+                ["hdmi1", "hdmi2", "optical", "bt", "aux", "din"],
+            )
+            with patch.object(SoundbarAPI, "set_input", AsyncMock()) as set_input:
+                with self.assertRaises(ServiceValidationError) as err:
+                    await self.hass.services.async_call(
+                        "media_player",
+                        "select_source",
+                        {"entity_id": player.entity_id, "source": "wifi"},
+                        blocking=True,
+                    )
+                self.assertEqual(err.exception.translation_key, "network_source")
+                set_input.assert_not_awaited()
 
             flow = await self.hass.config_entries.options.async_init(
                 config_entry.entry_id
