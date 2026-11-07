@@ -6,7 +6,21 @@ the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Bass, treble, rear level, the subwoofer range, the Korean translation and the
+config flow fix come from the
+[Hyunook fork](https://github.com/Hyunook/ha_samsung_soundbar_local) — thanks!
+
+### ✨ Added
+
+- 🎚️ **Bass** and **treble** numbers from −6 to +6.
+- 🔊 **Rear level** number from −6 to +6. It is only available while the rear
+  speakers are on and connected, so changing it never switches them on.
+- 🌍 Korean translation.
+
 ### 🐛 Fixed
+
+- 🧩 Adding the integration manually (Settings → Add integration) answered with
+  error 500: the host validator could not be serialized for the form.
 
 - 🎵 The integration no longer fails while Spotify Connect is playing. The
   soundbar does not answer `GetFunc` in that mode, which stopped every update
@@ -24,6 +38,7 @@ the project uses [Semantic Versioning](https://semver.org/).
 - 🎛️ The HW-Q950T only offers `hdmi1`, `hdmi2`, `optical` and `bt`: `aux` does
   not answer there and `din` is the same input as `optical` (D.IN / TV ARC in
   the SmartThings app). Other models keep `aux` and `din`.
+- 🎚️ The subwoofer goes down to −12, like in the SmartThings app.
 
 ## [1.1.3] - 2026-10-31
 

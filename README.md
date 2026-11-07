@@ -38,11 +38,11 @@
 
 - 🏠 **100 % local** – talks directly to the soundbar's HTTP/XML API on port `56001`
 - 🎛️ **Media player** – power, volume, mute and input selection
-- 🎚️ **Subwoofer level** and 🎼 **equalizer presets read directly from the device**, when the model supports them
+- 🎚️ **Subwoofer, bass, treble and rear level** and 🎼 **equalizer presets read directly from the device**, when the model supports them
 - 🎧 **Sound mode** sensor
 - 🔍 **SSDP discovery** and setup entirely through the UI
 - 🔁 **Reconfigure** the address without removing the device
-- 🌍 Translated into English and German
+- 🌍 Translated into English, German and Korean
 
 ## ✅ Compatibility
 
@@ -105,7 +105,10 @@ Go to **Settings → Devices & services → Add integration** and search for
 | Entity | Type | Description |
 | --- | --- | --- |
 | Soundbar | `media_player` | Power, volume, mute, input source |
-| Subwoofer | `number` | Level from −6 to +6 *(optional)* |
+| Subwoofer | `number` | Level from −12 to +6 *(optional)* |
+| Bass | `number` | Level from −6 to +6 *(optional)* |
+| Treble | `number` | Level from −6 to +6 *(optional)* |
+| Rear level | `number` | Level from −6 to +6, only while the rear speakers are on and connected *(optional)* |
 | Equalizer | `select` | Presets reported by your soundbar *(optional)* |
 | Sound mode | `sensor` | Current sound mode, read-only *(optional)* |
 
