@@ -38,11 +38,11 @@
 
 - 🏠 **100 % local** – talks directly to the soundbar's HTTP/XML API on port `56001`
 - 🎛️ **Media player** – power, volume, mute and input selection
-- 🎚️ **Subwoofer level** and 🎼 **equalizer presets read directly from the device**, when the model supports them
+- 🎚️ **Subwoofer, bass, treble and rear level** and 🎼 **equalizer presets read directly from the device**, when the model supports them
 - 🎧 **Sound mode** sensor
 - 🔍 **SSDP discovery** and setup entirely through the UI
 - 🔁 **Reconfigure** the address without removing the device
-- 🌍 Translated into English and German
+- 🌍 Translated into English, German and Korean
 
 ## ✅ Compatibility
 
@@ -105,12 +105,28 @@ Go to **Settings → Devices & services → Add integration** and search for
 | Entity | Type | Description |
 | --- | --- | --- |
 | Soundbar | `media_player` | Power, volume, mute, input source |
-| Subwoofer | `number` | Level from −6 to +6 *(optional)* |
+| Subwoofer | `number` | Level from −12 to +6 *(optional)* |
+| Bass | `number` | Level from −6 to +6 *(optional)* |
+| Treble | `number` | Level from −6 to +6 *(optional)* |
+| Rear level | `number` | Level from −6 to +6, only while the rear speakers are on and connected *(optional, assumed state)* |
 | Equalizer | `select` | Presets reported by your soundbar *(optional)* |
 | Sound mode | `sensor` | Current sound mode, read-only *(optional)* |
 
-Available inputs: `wifi`, `bt`, `optical`, `hdmi1`, `hdmi2`, `aux`, `din`.
-Your model may accept only some of them.
+Selectable inputs depend on the model:
+
+| Model | Inputs |
+| --- | --- |
+| HW-Q950T (verified) | `hdmi1`, `hdmi2`, `optical`, `bt` |
+| Other models | `hdmi1`, `hdmi2`, `optical`, `bt`, `aux`, `din` |
+
+On the HW-Q950T, `optical` is the value the soundbar reports for the input the
+SmartThings app calls **D.IN / TV ARC**; `din` only switches to that same input
+and `aux` does not exist. Other models may support `aux` and `din`, or only some
+of the inputs. If you know which ones work on your model, please
+[open an issue](https://github.com/V4n1X/ha_samsung_soundbar_local/issues).
+
+While Spotify Connect or casting plays, the input shows as `wifi`. It cannot be
+selected; the soundbar only enters it from the app.
 
 🎼 **Equalizer presets are read from the device.** The preset list
 (`Get7BandEQList`) is fetched when the integration starts and stored with the
@@ -130,6 +146,18 @@ them. They never show made-up values.
   reachable.
 - Optional commands the device rejects are skipped until the integration
   reloads. Failed optional reads are retried after five minutes.
+- While Spotify Connect or casting plays, the soundbar does not answer the
+  input query, so the input is shown as `wifi` and each update takes about two
+  seconds longer. If a model also stops answering the input query during TV
+  playback (reported for a TV session, not verified with TV ARC), the input
+  may show as `wifi` there too; control keeps working.
+- The rear level and the SmartThings app's **Channel volume → Rear** change the
+  same speakers, and the last change wins. The soundbar keeps the two values
+  apart, though: the rear level only shows what was last set from Home
+  Assistant, never a change made in the app. Home Assistant marks it as an
+  assumed state. Bass, treble and subwoofer stay in sync with the app. The
+  app's other channel levels (center, side, front top, rear top) are not
+  available locally.
 
 ## 🩺 Troubleshooting
 

@@ -1,5 +1,6 @@
 """Integration tests against the real Home Assistant runtime; synthetic data only."""
 
+import asyncio
 import json
 import os
 import tempfile
@@ -12,7 +13,7 @@ import aiohttp
 from aiohttp import web
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from custom_components.samsung_soundbar_local.api import (
     SoundbarAPI,
@@ -96,6 +97,128 @@ class ReleaseTests(unittest.IsolatedAsyncioTestCase):
                     await api.get_volume()
         finally:
             await runner.cleanup()
+
+    async def test_input_falls_back_when_getfunc_hangs(self):
+        hang = True
+
+        async def uic(request):
+            self.assertEqual(request.query["cmd"], "<name>GetFunc</name>")
+            if hang:
+                await asyncio.sleep(10)
+            return web.Response(
+                text='<UIC><response result="ok"><function>hdmi1</function></response></UIC>'
+            )
+
+        async def cpm(request):
+            self.assertEqual(request.query["cmd"], "<name>GetPlayStatus</name>")
+            return web.Response(
+                text='<CPM><response result="ok">\n<function>wifi</function>\n'
+                "<submode>cp</submode></response></CPM>"
+            )
+
+        app = web.Application()
+        app.router.add_get("/UIC", uic)
+        app.router.add_get("/CPM", cpm)
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, "127.0.0.1", 0)
+        await site.start()
+        port = site._server.sockets[0].getsockname()[1]
+        try:
+            async with aiohttp.ClientSession() as session:
+                api = SoundbarAPI("127.0.0.1", session, port)
+                self.assertEqual(await api.get_input(), "wifi")
+                hang = False
+                self.assertEqual(await api.get_input(), "hdmi1")
+        finally:
+            await runner.cleanup()
+
+    async def test_responses_for_other_commands_are_asked_again(self):
+        def uic(method, body, result="ok"):
+            return (
+                f"<UIC><method>{method}</method>"
+                f'<response result="{result}">{body}</response></UIC>'
+            )
+
+        woofer = uic("WooferLevel", "<level>2</level><connection>on</connection>")
+        rear = uic(
+            "RearLevel",
+            "<level>0</level><activate>on</activate><connection>on</connection>",
+        )
+        replies = []
+        sent = []
+
+        async def handler(request):
+            sent.append(request.query["cmd"])
+            return web.Response(text=replies.pop(0))
+
+        app = web.Application()
+        app.router.add_get("/UIC", handler)
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, "127.0.0.1", 0)
+        await site.start()
+        port = site._server.sockets[0].getsockname()[1]
+        try:
+            async with aiohttp.ClientSession() as session:
+                api = SoundbarAPI("127.0.0.1", session, port)
+                # Same <level> field: the rear response must not become the woofer.
+                replies[:] = [rear, woofer]
+                self.assertEqual(await api.get_woofer_level(), 2)
+                # An empty accepted read is asked again, not taken as rears off.
+                replies[:] = [uic("RearLevel", ""), rear]
+                self.assertEqual(await api.get_rear_level(), 0)
+                # Another command's rejection does not mark this one unsupported.
+                replies[:] = [
+                    uic("EQBalance", "", "ng"),
+                    uic("EQBass", "<eqbass>3</eqbass>"),
+                ]
+                self.assertEqual(await api.get_bass(), 3)
+                sent.clear()
+                replies[:] = [rear] * 3
+                with self.assertRaises(SoundbarAPIError) as err:
+                    await api.get_woofer_level()
+                self.assertNotIsInstance(err.exception, SoundbarUnsupportedError)
+                self.assertEqual(len(sent), 3)
+                # Commands are not repeated.
+                sent.clear()
+                replies[:] = [rear]
+                await api.set_woofer_level(1)
+                self.assertEqual(len(sent), 1)
+        finally:
+            await runner.cleanup()
+
+    async def test_input_failure_keeps_last_source(self):
+        coordinator = SoundbarCoordinator(self.hass, entry())
+        for name, value in [
+            ("get_power", "1"),
+            ("get_volume", 20),
+            ("get_mute", "off"),
+            ("get_input", "hdmi1"),
+            ("get_sound_mode", "standard"),
+            ("get_woofer_level", 0),
+            ("get_eq_mode", 1),
+        ]:
+            setattr(coordinator.api, name, AsyncMock(return_value=value))
+        coordinator.data = await coordinator._async_update_data()
+        coordinator.api.get_input = AsyncMock(side_effect=SoundbarAPIError())
+        data = await coordinator._async_update_data()
+        self.assertEqual(data["source"], "hdmi1")
+        self.assertEqual(data["volume"], 20)
+
+    async def test_verified_model_offers_only_its_inputs(self):
+        from custom_components.samsung_soundbar_local.media_player import (
+            SamsungSoundbarEntity,
+        )
+
+        coordinator = SoundbarCoordinator(self.hass, entry(model="HW-Q950T"))
+        player = SamsungSoundbarEntity(coordinator, None)
+        self.assertEqual(player.source_list, ["hdmi1", "hdmi2", "optical", "bt"])
+        player.coordinator.api.set_input = AsyncMock()
+        with self.assertRaises(ServiceValidationError) as err:
+            await player.async_select_source("aux")
+        self.assertEqual(err.exception.translation_key, "invalid_source")
+        player.coordinator.api.set_input.assert_not_awaited()
 
     async def test_eq_preset_list(self):
         api = SoundbarAPI("example.invalid", None)
@@ -229,6 +352,21 @@ class ReleaseTests(unittest.IsolatedAsyncioTestCase):
                         blocking=True,
                     )
                 self.assertEqual(err.exception.translation_key, "command_failed")
+            player = self.hass.states.async_all("media_player")[0]
+            self.assertEqual(
+                player.attributes["source_list"],
+                ["hdmi1", "hdmi2", "optical", "bt", "aux", "din"],
+            )
+            with patch.object(SoundbarAPI, "set_input", AsyncMock()) as set_input:
+                with self.assertRaises(ServiceValidationError) as err:
+                    await self.hass.services.async_call(
+                        "media_player",
+                        "select_source",
+                        {"entity_id": player.entity_id, "source": "wifi"},
+                        blocking=True,
+                    )
+                self.assertEqual(err.exception.translation_key, "network_source")
+                set_input.assert_not_awaited()
 
             flow = await self.hass.config_entries.options.async_init(
                 config_entry.entry_id
@@ -520,6 +658,13 @@ class ToneAndRearLevelTests(unittest.IsolatedAsyncioTestCase):
             mocks["get_rear_level"].return_value = 1
             await config_entry.runtime_data.async_refresh()
             self.assertEqual(self.hass.states.get(ids["rear_level"]).state, "1")
+            # The app changes the rears without GetRearLevel noticing.
+            self.assertTrue(
+                self.hass.states.get(ids["rear_level"]).attributes["assumed_state"]
+            )
+            self.assertNotIn(
+                "assumed_state", self.hass.states.get(ids["bass"]).attributes
+            )
             for key, value in (("bass", -6), ("treble", 6), ("rear_level", -1)):
                 await self.hass.services.async_call(
                     "number",
@@ -539,39 +684,6 @@ class ToneAndRearLevelTests(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(
                 await self.hass.config_entries.async_unload(config_entry.entry_id)
             )
-
-
-class SourceTests(unittest.IsolatedAsyncioTestCase):
-    """A soundbar that will not report its input stays available."""
-
-    asyncSetUp = ReleaseTests.asyncSetUp
-    asyncTearDown = ReleaseTests.asyncTearDown
-
-    async def test_missing_source_keeps_device_available(self):
-        coordinator = SoundbarCoordinator(self.hass, entry())
-        for name, value in [
-            ("get_power", "1"),
-            ("get_volume", 9),
-            ("get_mute", "off"),
-            ("get_sound_mode", "adaptive sound"),
-            ("get_woofer_level", 0),
-            ("get_eq_mode", 0),
-            ("get_bass", 3),
-            ("get_treble", 0),
-            ("get_rear_level", 0),
-        ]:
-            setattr(coordinator.api, name, AsyncMock(return_value=value))
-        coordinator.api.get_input = AsyncMock(
-            side_effect=SoundbarAPIError("Missing function in GetFunc response")
-        )
-        data = await coordinator._async_update_data()
-        self.assertTrue(data["power"])
-        self.assertEqual((data["volume"], data["bass"]), (9, 3))
-        self.assertIsNone(data["source"])
-        coordinator.api.get_input.side_effect = None
-        coordinator.api.get_input.return_value = "d.in"
-        coordinator._optional_retry_at.clear()
-        self.assertEqual((await coordinator._async_update_data())["source"], "d.in")
 
 
 class FormSchemaTests(unittest.TestCase):

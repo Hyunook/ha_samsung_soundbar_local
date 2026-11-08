@@ -4,6 +4,65 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.1.5] - 2026-11-07
+
+### 🐛 Fixed
+
+- 🔀 Values are no longer mixed up between commands. The soundbar sometimes
+  answers a request with the response meant for another one, for example when
+  the SmartThings app talks to it at the same time. The subwoofer could then
+  show the rear level, and a stray response to the volume query made the whole
+  device unavailable. Every read is now checked against the command named in
+  the response and asked again, up to three times.
+- 🔊 An empty answer to the rear level query is asked again instead of being
+  read as rear speakers off.
+
+### 🎨 Changed
+
+- 🔊 The rear level is marked as an assumed state. It changes the same speakers
+  as the SmartThings app's channel volume for the rear, but the app's changes
+  never show up in it. Verified on a HW-Q950T.
+
+## [1.1.4] - 2026-11-07
+
+The integration's client was tested against a Samsung HW-Q950T (Spotify
+Connect, HDMI playback, input switching, subwoofer range); automated tests run
+on the latest stable Home Assistant release and 2026.9.4. TV ARC playback is
+not verified.
+
+Bass, treble, rear level, the subwoofer range, the Korean translation and the
+config flow fix come from the
+[Hyunook fork](https://github.com/Hyunook/ha_samsung_soundbar_local) — thanks!
+
+### ✨ Added
+
+- 🎚️ **Bass** and **treble** numbers from −6 to +6.
+- 🔊 **Rear level** number from −6 to +6. It is only available while the rear
+  speakers are on and connected, so changing it never switches them on.
+- 🌍 Korean translation.
+
+### 🐛 Fixed
+
+- 🧩 Adding the integration manually (Settings → Add integration) answered with
+  error 500: the host validator could not be serialized for the form.
+- 🎵 The integration no longer fails while Spotify Connect is playing. The
+  soundbar does not answer `GetFunc` in that mode, which stopped every update
+  and left the entry in setup retry. When `GetFunc` does not answer within
+  2 seconds, the input is read from the CPM play status (`GetPlayStatus`),
+  which reports `wifi` in that mode.
+- 🔌 A failed input query no longer marks the whole device unavailable; the last
+  known input is kept.
+
+### 🎨 Changed
+
+- 🎛️ `wifi` is no longer offered as an input. It is still shown as the current
+  input during Spotify Connect or casting, but selecting it now gives a clear
+  error instead of a timeout; the soundbar never switches to it on command.
+- 🎛️ The HW-Q950T only offers `hdmi1`, `hdmi2`, `optical` and `bt`: `aux` does
+  not answer there and `din` is the same input as `optical` (D.IN / TV ARC in
+  the SmartThings app). Other models keep `aux` and `din`.
+- 🎚️ The subwoofer goes down to −12, like in the SmartThings app.
+
 ## [1.1.3] - 2026-10-31
 
 No functional changes to the integration.

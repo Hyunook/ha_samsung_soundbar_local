@@ -82,10 +82,12 @@ class SoundbarCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             }
         except SoundbarAPIError as err:
             raise UpdateFailed(str(err)) from err
+        try:
+            data["source"] = await self.api.get_input()
+        except SoundbarAPIError as err:
+            _LOGGER.debug("Keeping last known input: %s", err)
+            data["source"] = (self.data or {}).get("source")
         for key, getter in (
-            # The HW-Q950T does not answer GetFunc while it is playing (timeout or no
-            # <function>), so a missing source must not take the whole device down
-            ("source", self.api.get_input),
             ("sound_mode", self.api.get_sound_mode),
             ("woofer_level", self.api.get_woofer_level),
             ("eq_mode", self.api.get_eq_mode),

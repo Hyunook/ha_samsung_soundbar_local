@@ -97,6 +97,9 @@
     },
     "invalid_source": {
       "message": "Nicht unterstützte Eingangsquelle: {source}"
+    },
+    "network_source": {
+      "message": "Der WLAN-Eingang kann nicht ausgewählt werden. Er startet, wenn Spotify Connect oder Casting auf der Soundbar abspielt."
     }
   }
 }
